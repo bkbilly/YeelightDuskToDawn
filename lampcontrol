@@ -13,9 +13,9 @@
  
 NAME=lampControl
 DAEMON=/usr/bin/python
-CONFIG=' /home/bkbilly/Lamp/lampControl.py'
-DAEMON_UID='nasuser'
-DAEMON_GID='nasuser'
+CONFIG=' /opt/YeelightDuskToDawn/lampControl.py'
+DAEMON_UID='user'
+DAEMON_GID='user'
  
 case "$1" in
     start)
