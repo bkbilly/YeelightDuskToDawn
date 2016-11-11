@@ -1,0 +1,44 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides: lampControl
+# Required-Start: $local_fs $remote_fs
+# Required-Stop: $local_fs $remote_fs
+# Should-Start: $network
+# Should-Stop: $network
+# Default-Start: 2 3 4 5
+# Default-Stop: 0 1 6
+# Short-Description: Multi-user daemonized version of lampControl.
+# Description: Starts the lampControl daemon for all registered users.
+### END INIT INFO
+ 
+NAME=lampControl
+DAEMON=/usr/bin/python
+CONFIG=' /home/bkbilly/Lamp/lampControl.py'
+DAEMON_UID='nasuser'
+DAEMON_GID='nasuser'
+ 
+case "$1" in
+    start)
+        echo "Starting $NAME"
+        mkdir /var/run/lampControl
+        chown $DAEMON_UID:$DAEMON_UID /var/run/lampControl
+        start-stop-daemon --start -c $DAEMON_UID -x $DAEMON --chuid $DAEMON_UID:$DAEMON_GID -- $CONFIG
+        ;;
+    stop)
+        echo "Stopping $NAME"
+        rm -r /var/run/lampControl
+        start-stop-daemon --stop -x $DAEMON
+        ;;
+    status)
+        dbpid=`pidof $NAME`
+        if [ -z "$dbpid" ]; then
+          echo "lampControl not running."
+        else
+          echo "lampControl running (pid $dbpid)"
+        fi
+        ;;
+    *)
+        echo "Usage: /etc/init.d/lampControl {start|stop|status}"
+        exit 1
+    esac
+exit 0
