@@ -12,17 +12,17 @@
 ### END INIT INFO
  
 NAME=lampControl
-DAEMON=/usr/bin/python
-CONFIG=' /opt/YeelightDuskToDawn/lampControl.py'
-DAEMON_UID='user'
-DAEMON_GID='user'
+DAEMON='/usr/bin/python /opt/YeelightDuskToDawn/lampControl.py'
+CONFIG=''
+DAEMON_UID='yeelight'
+DAEMON_GID='nasuser'
  
 case "$1" in
     start)
         echo "Starting $NAME"
         mkdir /var/run/lampControl
         chown $DAEMON_UID:$DAEMON_UID /var/run/lampControl
-        start-stop-daemon --start -c $DAEMON_UID -x $DAEMON --chuid $DAEMON_UID:$DAEMON_GID -- $CONFIG
+        start-stop-daemon --start --background -c $DAEMON_UID -x $DAEMON --chuid $DAEMON_UID:$DAEMON_GID -- $CONFIG
         ;;
     stop)
         echo "Stopping $NAME"
