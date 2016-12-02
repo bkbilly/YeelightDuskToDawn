@@ -10,31 +10,33 @@
 # Short-Description: Multi-user daemonized version of lampControl.
 # Description: Starts the lampControl daemon for all registered users.
 ### END INIT INFO
- 
-NAME=lampControl
+
+NAME="lampControl"
+PIDFILE='/var/run/lampControl/lampControl.pid'
 DAEMON='/usr/bin/python /opt/YeelightDuskToDawn/lampControl.py'
-CONFIG=''
+CONFIG='$PIDFILE'
 DAEMON_UID='yeelight'
 DAEMON_GID='nasuser'
- 
+
 case "$1" in
     start)
         echo "Starting $NAME"
-        mkdir /var/run/lampControl
+        mkdir /var/run/lampControl 2> /dev/null
         chown $DAEMON_UID:$DAEMON_UID /var/run/lampControl
-        start-stop-daemon --start --background -c $DAEMON_UID -x $DAEMON --chuid $DAEMON_UID:$DAEMON_GID -- $CONFIG
+        start-stop-daemon --pidfile $PIDFILE --start --background -c $DAEMON_UID -x $DAEMON --chuid $DAEMON_UID:$DAEMON_GID -- $PIDFILE
         ;;
     stop)
         echo "Stopping $NAME"
-        rm -r /var/run/lampControl
-        start-stop-daemon --stop -x $DAEMON
+        start-stop-daemon --pidfile $PIDFILE --stop -x $DAEMON
+        rm -r /var/run/lampControl 2> /dev/null
         ;;
     status)
-        dbpid=`pidof $NAME`
+        dbpid=`cat $PIDFILE`
         if [ -z "$dbpid" ]; then
           echo "lampControl not running."
         else
           echo "lampControl running (pid $dbpid)"
+          echo `$DAEMON status`
         fi
         ;;
     *)
@@ -42,3 +44,4 @@ case "$1" in
         exit 1
     esac
 exit 0
+

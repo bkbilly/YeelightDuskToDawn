@@ -6,9 +6,10 @@ import datetime
 import pytz
 import time
 from astral import Astral
+import os
+import sys
 
-
-bulb_ip = '192.168.2.131'
+bulb_ip = '192.168.2.132'
 port = 55443
 
 
@@ -27,8 +28,6 @@ def getDuskDawnTimes():
         timeUntilDawn = int((sunTomorrow['dawn'] - nowTime).total_seconds())
     # duskToDawn = int((sunTomorrow['dawn'] - sunToday['dusk']).total_seconds() / 60)
 
-    print sunToday['dusk']
-    print sunTomorrow['dawn']
     return timeUntilDusk, timeUntilDawn  # Minutes, Seconds
 
 
@@ -39,19 +38,33 @@ def controlBulb(command):
         tcp_socket.connect((bulb_ip, int(port)))
         tcp_socket.send(msg)
         data = tcp_socket.recv(1024)
-        print data
         tcp_socket.close()
     except Exception as e:
         print "Unexpected error:", e
 
+showStatus = False
+if len(sys.argv) > 1:
+    if ".pid" in sys.argv[1]:
+        with open(sys.argv[1], "w") as f:
+            f.write(str(os.getpid()))
+    elif sys.argv[1] == "status":
+        showStatus = True
+        timeUntilDusk, timeUntilDawn = getDuskDawnTimes()
+        if (timeUntilDawn < timeUntilDusk):
+            setBulbState = "OFF"
+            sleeptime = timeUntilDawn
+        else:
+            setBulbState = "ON"
+            sleeptime = timeUntilDusk
+        print "In %d minutes the bulb is going to be %s" % (sleeptime / 60, setBulbState)
 
-while True:
+
+while True and showStatus is False:
     # TOGGLE = {"id": 1, "method": "toggle", "params": []}
     ON = {"id": 1, "method": "set_power", "params": ["on", "smooth", 500]}  # milliseconds
     OFF = {"id": 1, "method": "set_power", "params": ["off", "smooth", 500]}  # milliseconds
 
     timeUntilDusk, timeUntilDawn = getDuskDawnTimes()
-    print timeUntilDusk, timeUntilDawn
 
     if (timeUntilDawn < timeUntilDusk):
         setBulbState = "OFF"
