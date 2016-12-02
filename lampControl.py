@@ -8,7 +8,7 @@ import time
 from astral import Astral
 
 
-bulb_ip = '192.168.2.64'
+bulb_ip = '192.168.2.131'
 port = 55443
 
 
@@ -22,9 +22,14 @@ def getDuskDawnTimes():
     timeUntilDusk = int((sunToday['dusk'] - nowTime).total_seconds())
     if timeUntilDusk < 0:
         timeUntilDusk = int((sunTomorrow['dusk'] - nowTime).total_seconds())
-    duskToDawn = int((sunTomorrow['dawn'] - sunToday['dusk']).total_seconds() / 60)
+    timeUntilDawn = int((sunToday['dawn'] - nowTime).total_seconds())
+    if timeUntilDawn < 0:
+        timeUntilDawn = int((sunTomorrow['dawn'] - nowTime).total_seconds())
+    # duskToDawn = int((sunTomorrow['dawn'] - sunToday['dusk']).total_seconds() / 60)
 
-    return duskToDawn, timeUntilDusk
+    print sunToday['dusk']
+    print sunTomorrow['dawn']
+    return timeUntilDusk, timeUntilDawn  # Minutes, Seconds
 
 
 def controlBulb(command):
@@ -41,16 +46,28 @@ def controlBulb(command):
 
 
 while True:
-    duskToDawn, timeUntilDusk = getDuskDawnTimes()
-    print timeUntilDusk
-    time.sleep(timeUntilDusk)
-
     # TOGGLE = {"id": 1, "method": "toggle", "params": []}
     ON = {"id": 1, "method": "set_power", "params": ["on", "smooth", 500]}  # milliseconds
-    CRON = {"id": 2, "method": "cron_add", "params": [0, duskToDawn]}  # Minutes
-    CRON_GET = {"id": 2, "method": "cron_get", "params": [0]}
+    OFF = {"id": 1, "method": "set_power", "params": ["off", "smooth", 500]}  # milliseconds
 
-    controlBulb(ON)
-    controlBulb(CRON)
-    controlBulb(CRON_GET)
+    timeUntilDusk, timeUntilDawn = getDuskDawnTimes()
+    print timeUntilDusk, timeUntilDawn
+
+    if (timeUntilDawn < timeUntilDusk):
+        setBulbState = "OFF"
+        sleeptime = timeUntilDawn
+        controlBulb(ON)
+    else:
+        setBulbState = "ON"
+        sleeptime = timeUntilDusk
+        controlBulb(OFF)
+
+    print "In %d minutes the bulb is going to be %s" % (sleeptime / 60, setBulbState)
+    time.sleep(sleeptime)
+
+    msgCtrl = OFF
+    if setBulbState == "ON":
+        msgCtrl = ON
+
+    controlBulb(msgCtrl)
     time.sleep(2)
